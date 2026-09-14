@@ -6,12 +6,15 @@ entity datapath is
     port (clk, reset : in  std_logic;
 
           -- из decoder
-          ImmSrc     : in  std_logic_vector(1 downto 0);
-          ALUSrcA    : in  std_logic;
+          ImmSrc     : in  std_logic_vector(2 downto 0);
+          ALUSrcA    : in  std_logic_vector(1 downto 0);
           ALUSrcB    : in  std_logic;
           ResultSrc  : in  std_logic_vector(1 downto 0);
           RegWrite   : in  std_logic;
           PCSrc      : in  std_logic;
+          JumpSrc    : in  std_logic;
+          ALUControl  : in  std_logic_vector(3 downto 0);
+          Zero, ALUResultLSB : out std_logic;
 
           -- из памяти иснтр 
           PC         : out std_logic_vector(31 downto 0);
@@ -44,7 +47,7 @@ architecture struct of datapath is
     end component;
 
     component extend is
-        port ( s : in std_logic_vector (1 downto 0);
+        port ( s : in std_logic_vector (2 downto 0);
                instr : in std_logic_vector (31 downto 7);
                y : out std_logic_vector (31 downto 0));
     end component;
@@ -68,12 +71,20 @@ architecture struct of datapath is
               y : out std_logic_vector (n downto 0));
     end component;
 
+    component alu is
+    port (a, b : in  std_logic_vector(31 downto 0);
+          ALUControl : in  std_logic_vector(3 downto 0);
+          result : out std_logic_vector(31 downto 0);
+          zero : out std_logic);
+    end component;
+
 signal instr_bits : std_logic_vector (31 downto 7);
 signal a1, a2, a3, wd3 : std_logic_vector (4 downto 0);
 signal rd1, rd2      : std_logic_vector(31 downto 0);
-    
-signal pc_t, PCnext, pc4, pctarget: std_logic_vector (31 downto 0);
-signal immext, result , alures, srca : std_logic_vector(31 downto 0);
+signal zero_s : std_logic;
+
+signal pc_t, PCnext, pc4, pctarget, jumpbase: std_logic_vector (31 downto 0);
+signal immext, result , alures, srca, srcb : std_logic_vector(31 downto 0);
 constant ZERO32 : std_logic_vector(31 downto 0) := (others => '0');
 constant FOUR : std_logic_vector(31 downto 0) := X"00000004";
 
@@ -83,8 +94,12 @@ begin
     pc <= pc_t;         
          
     add4 : add port map (a => PC_t, b => FOUR, s => PC4);
+
+    -- jal(PC) / jalr(RD1)
+    jumpbase_mux : mux2 generic map (n => 31)
+                        port map (a => rd1, b => pc_t, sel => JumpSrc, y => jumpbase);
     
-    add_target: add port map (a => PC_t, b => ImmExt, s => PCTarget);
+    add_target: add port map (a => jumpbase, b => ImmExt, s => PCTarget);
 
     ext : extend port map (s => ImmSrc, instr => instr_bits, y => ImmExt);
     
@@ -102,12 +117,18 @@ begin
                        port map (clk => clk, clr => reset, we => RegWrite, wa => a3, ra1 => a1, ra2 => a2, wdp => result,  rdp1 => rd1, rdp2 => rd2);
     WriteData <= rd2;
     
-    -- SrcA: ALUSrcA=1 -> 0 (lui), ALUSrcA=0 -> RD1
-    a_mux : mux2 generic map (n => 31)
-                 port map (a => ZERO32, b => rd1, sel => ALUSrcA, y => srcA);
-          
-    alu : add port map (a => srcA, b => immext, s => alures);
+    -- SrcA: 00=RD1, 01=0 (lui), 10=PC (auipc)
+    a_mux : mux3 generic map (n => 31)
+                 port map (a => rd1, b => ZERO32, c => pc_t, sel => ALUSrcA, y => srcA);
+
+     -- SrcB: 1 -> ImmExt, 0 -> RD2
+    b_mux : mux2 generic map (n => 31)
+                 port map (a => immext, b => rd2, sel => ALUSrcB, y => srcB);
+
+    alu_i : alu port map (a => srcA, b => srcB, ALUControl => ALUControl, result => alures, zero => zero_s);
     aluresult <= alures;
+    zero <= zero_s;
+    ALUResultLSB <= alures(0);
 
     res_mux : mux3 generic map (n => 31)
                    port map (a => alures, b=> readdata, c => pc4, sel => ResultSrc, y =>  result);

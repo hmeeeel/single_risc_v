@@ -2,44 +2,63 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity decoder is
-    port (
-    immsrc, resSrc : out std_logic_vector(1 downto 0);
-    aluA, aluB, MemWr, RegWr, PCSrc : out  std_logic;
-    op : in std_logic_vector (6 downto 0));
+    port (op           : in  std_logic_vector(6 downto 0);
+          funct3       : in  std_logic_vector(2 downto 0);
+          funct7b5     : in  std_logic;
+          Zero         : in  std_logic;
+          ALUResultLSB : in  std_logic;
+
+          RegWrite     : out std_logic;
+          ImmSrc       : out std_logic_vector(2 downto 0);
+          ALUSrcA      : out std_logic_vector(1 downto 0);
+          ALUSrcB      : out std_logic;
+          MemWrite     : out std_logic;
+          ResultSrc    : out std_logic_vector(1 downto 0);
+          JumpSrc      : out std_logic;
+          ALUControl   : out std_logic_vector(3 downto 0);
+          PCSrc        : out std_logic);
 end;
 
-architecture beh of decoder is
+architecture struct of decoder is
+    component main_decoder is
+    port (op : in  std_logic_vector(6 downto 0);
+          RegWrite, MemWrite, ALUSrcB : out std_logic;
+          ImmSrc : out std_logic_vector(2 downto 0);
+          ALUSrcA, ResultSrc, ALUOp : out std_logic_vector(1 downto 0);
+          Branch, Jump, JumpSrc : out std_logic);
+    end component;
+
+    component alu_decoder is
+    port (funct3 : in  std_logic_vector(2 downto 0);
+          funct7b5, op5 : in  std_logic;
+          ALUOp : in  std_logic_vector(1 downto 0);
+          ALUControl : out std_logic_vector(3 downto 0));
+    end component;
+
+    signal Branch, Jump        : std_logic;
+    signal ALUOp                : std_logic_vector(1 downto 0);
+    signal BranchTaken, Taken   : std_logic;
+
+    component mux2 is
+    generic (n : natural := 31);
+    port (a, b : in std_logic_vector(n downto 0);  
+          sel : in std_logic; 
+          y : out std_logic_vector(n downto 0) );
+    end component;
 begin
 
-    process(op)
-    variable res : std_logic_vector(8 downto 0);
-    begin
-        case op is
+    md : main_decoder port map (op => op, RegWrite => RegWrite, ImmSrc => ImmSrc,
+                            ALUSrcA => ALUSrcA, ALUSrcB => ALUSrcB, MemWrite => MemWrite,
+                            ResultSrc => ResultSrc, Branch => Branch, Jump => Jump,
+                            JumpSrc => JumpSrc, ALUOp => ALUOp);
 
-        -- LW
-        --when "0000011" => res := "100001010";
-        when "0000011" => res := '1' & '0' & "00" & '0' & '1' & "01" & '0';
+    ad : alu_decoder port map (funct3 => funct3, funct7b5 => funct7b5, op5 => op(5),
+                           ALUOp => ALUOp, ALUControl => ALUControl);
 
-        --SW
-        when "0100011" => res := '0' & '1' & "01" & '0' & '1' & "--" & '0';
+    -- beq/bne
+    BranchTaken <= Zero when funct3(2) = '0' else ALUResultLSB;
 
-        --LUI
-        when "0110111" => res := '1' & '0' & "10" & '1' & '1' & "00" & '0';
-
-        --JAL
-        when "1101111" => res := '1' & '0' & "11" & '-' & '-' & "10" & '1';
-        
-        when others => res := "---------";
-
-        end case;
-
-        RegWr <= res(8);
-        MemWr <= res(7);
-        immsrc <= res(6 downto 5);
-        aluA <= res(4);
-        aluB <= res(3);
-        resSrc <= res(2 downto 1);
-        PCsrc <= res(0);
-
-    end process;
+    -- inverts bne, bge, bgeu
+    Taken <= BranchTaken xor funct3(0);
+    PCSrc <= (Branch and Taken) or Jump;
 end;
