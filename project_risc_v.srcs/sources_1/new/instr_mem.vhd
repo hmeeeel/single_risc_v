@@ -7,18 +7,21 @@ entity instr_mem is
           instr : out std_logic_vector(31 downto 0));
 end;
 
---0x00000000   
---0x00000004  0100
---0x00000008  1000
---0x0000000С  1100
-
 architecture beh of instr_mem is 
-    type rom_t is array (3 downto 0) of std_logic_vector(31 downto 0);
+    type rom_t is array (10 downto 0) of std_logic_vector(31 downto 0);
     constant rom: rom_t := (
-                            0 => x"C0000337",
-                            1=> x"00032283",
-                            2 => x"00532223",
-                            3 => x"FF5FF06F");
+                            0  => x"c0000e37",
+                            1  => x"000e2283",
+                            2  => x"0ff2f293",
+                            3  => x"00100313",
+                            4  => x"006e2223",
+                            5  => x"00735393",
+                            6  => x"00131313",
+                            7  => x"0ff37313",
+                            8  => x"00038463",
+                            9  => x"00534333",
+                            10 => x"fe9ff06f"
+                            );
 begin 
-    instr <= rom (to_integer(unsigned(pc(3 downto 2))));
+    instr <= rom (to_integer(unsigned(pc(7 downto 2))));
 end;

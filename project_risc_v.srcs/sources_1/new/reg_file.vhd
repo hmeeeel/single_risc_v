@@ -39,7 +39,9 @@ begin
     -- double read port 
     --is_x - для симуляции
     RDP2 <= ZEROS when (RA2 = "00000" or is_x(RA2)) else 
-            WDP when (WE = '1' and RA2 = WA) else -- конвеерн арх-та
+           -- WDP when (WE = '1' and RA2 = WA) else -- конвеерн арх-та - зацикл на такте
             REG_FILE(to_integer(unsigned(RA2)));
-    RDP1 <= ZEROS when (RA1 = "00000" or is_x(RA1)) else WDP when (WE = '1' and RA1 = WA) else REG_FILE(to_integer(unsigned(RA1)));
+    RDP1 <= ZEROS when (RA1 = "00000" or is_x(RA1)) else 
+           -- WDP when (WE = '1' and RA1 = WA) else
+            REG_FILE(to_integer(unsigned(RA1)));
 end;
