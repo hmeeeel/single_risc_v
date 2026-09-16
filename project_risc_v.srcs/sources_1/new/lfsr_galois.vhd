@@ -17,8 +17,8 @@ architecture behav of lfsr_galois is
     signal d, d_new: std_logic_vector(Ai'range);
     signal feedback, SI: std_logic;
     
-    constant SEED : std_logic_vector ( Ai'range ) := (0 => '1', others => '0');
-
+   constant SEED : std_logic_vector ( Ai'range ) := (0 => '1', others => '0');
+--constant SEED : std_logic_vector ( Ai'range ) := "10001110";
 begin
     feedback <= d(Ai'high);
 
