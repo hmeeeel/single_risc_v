@@ -41,5 +41,5 @@ architecture beh of instr_mem is
                             8  => x"ff9ff06f"
                             );
 begin 
-    instr <= rom (to_integer(unsigned(pc(7 downto 2))));
+    instr <= rom1 (to_integer(unsigned(pc(7 downto 2))));
 end;

@@ -17,6 +17,8 @@ architecture beh of lfsr_accel is
     signal Ai : std_logic_vector(7 downto 0) :=  X"8e"; --t0
     signal state, state_fb, state_nfb : std_logic_vector(7 downto 0) := (others => '0'); -- t1
     signal feedback : std_logic;
+    signal prev_aluresult : std_logic_vector(31 downto 0) := (others => '0');
+    signal state_accessed : std_logic;
     
 --C0000000  SWITCH
 --C0000004  LED
@@ -28,10 +30,15 @@ begin
     feedback <= state(7);
     state_fb <= (state(6 downto 0) & '0') xor Ai;
     state_nfb <=(state(6 downto 0) & '0');
+
+    state_accessed <= '1' when (aluresult = STATE_ADDR and  prev_aluresult /= STATE_ADDR) else '0';
+
      process(clk)
      variable run : std_logic := '0'; 
     begin
         if rising_edge(clk) then
+            prev_aluresult <= aluresult;
+
             if reset = '1' then
                 Ai    <= (others => '0');
                 state <= (others => '0');

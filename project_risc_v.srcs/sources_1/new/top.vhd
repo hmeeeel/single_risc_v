@@ -52,6 +52,15 @@ component freq is
            Q   : out std_logic);
 end component;
 
+component lfsr_accel_2 is
+    port (
+        clk, reset : in std_logic;
+        memwrite: in std_logic;
+        aluresult, writedata : in std_logic_vector(31 downto 0);
+        state_rd : out std_logic_vector(31 downto 0));
+end component;
+
+
 signal pc_s, instr_s : std_logic_vector(31 downto 0);
 signal memwrite_s, clk_slow : std_logic;
 signal aluresult_s, writedata_s, readdata_s, readdata_accel_s, readdata_dmem_s: std_logic_vector(31 downto 0);
@@ -83,13 +92,20 @@ begin
             EN  => '1',
             Q   => clk_slow);
 
-    accel : lfsr_accel port map (clk       => clk_slow,
-                                 reset     => reset,
-                                 memwrite  => memwrite_s,
-                                 aluresult => aluresult_s,
-                                 writedata => writedata_s,
-                                 state_rd  => readdata_accel_s);
+   -- accel : lfsr_accel port map (clk       => clk_slow,
+   --                              reset     => reset,
+   --                              memwrite  => memwrite_s,
+   --                              aluresult => aluresult_s,
+   --                              writedata => writedata_s,
+   --                              state_rd  => readdata_accel_s);
 
-            
+    accel_2 : lfsr_accel_2 port map (
+        clk       => clk_slow,
+        reset     => reset,
+        memwrite  => memwrite_s,
+        aluresult => aluresult_s,
+        writedata => writedata_s,
+        state_rd  => readdata_accel_s); 
+
     readdata_s <= readdata_accel_s when aluresult_s = STATE_ADDR else readdata_dmem_s;
 end;
