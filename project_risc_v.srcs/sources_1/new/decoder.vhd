@@ -32,7 +32,8 @@ architecture struct of decoder is
     port (funct3 : in  std_logic_vector(2 downto 0);
           funct7b5, op5 : in  std_logic;
           ALUOp : in  std_logic_vector(1 downto 0);
-          ALUControl : out std_logic_vector(3 downto 0));
+          ALUControl : out std_logic_vector(3 downto 0);
+          op : in std_logic_vector (6 downto 0));
     end component;
 
     signal Branch, Jump        : std_logic;
@@ -52,7 +53,7 @@ begin
                             ResultSrc => ResultSrc, Branch => Branch, Jump => Jump,
                             JumpSrc => JumpSrc, ALUOp => ALUOp);
 
-    ad : alu_decoder port map (funct3 => funct3, funct7b5 => funct7b5, op5 => op(5),
+    ad : alu_decoder port map (op => op, funct3 => funct3, funct7b5 => funct7b5, op5 => op(5),
                            ALUOp => ALUOp, ALUControl => ALUControl);
 
     -- beq/bne

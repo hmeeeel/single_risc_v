@@ -58,7 +58,7 @@ signal aluresult_s, writedata_s, readdata_s, readdata_accel_s, readdata_dmem_s: 
 constant STATE_ADDR : std_logic_vector(31 downto 0) := X"C0000010";
 signal K : unsigned(31 downto 0);
 begin 
-    cpu : risc_v_single port map (clk       => clk,
+    cpu : risc_v_single port map (clk       => clk_slow,
                                   reset     => reset,
                                   PC        => pc_s,
                                   Instr     => instr_s,
@@ -68,7 +68,7 @@ begin
                                   ReadData  => readdata_s);
     imem : instr_mem port map (pc => pc_s, instr => instr_s);
 
-    dmem : d_mem port map (clk       => clk,
+    dmem : d_mem port map (clk       => clk_slow,
                            memwrite  => memwrite_s,
                            aluresult => aluresult_s,
                            writedata => writedata_s,
@@ -76,14 +76,14 @@ begin
                            led_o     => led_o,
                            readdata  => readdata_dmem_s);
 
-    div : freq  generic map (K => x"0007A120") --500000
+    div : freq  generic map (K => x"00000002") -- 00989680 - 500000 - 0007A120--10 000 000 = 00989680
         port map (
             CLK => CLK,
             RST => reset,
             EN  => '1',
             Q   => clk_slow);
 
-    accel : lfsr_accel port map (clk       => clk,
+    accel : lfsr_accel port map (clk       => clk_slow,
                                  reset     => reset,
                                  memwrite  => memwrite_s,
                                  aluresult => aluresult_s,

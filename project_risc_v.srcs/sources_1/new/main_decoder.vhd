@@ -10,51 +10,28 @@ entity main_decoder is
 end;
 
 architecture beh of main_decoder is
+signal res: std_logic_vector(12 downto 0);
 begin
-    process(op)
-    variable res : std_logic_vector(14 downto 0);
-    begin
-        case op is
 
-            -- I - rd = mem[rs1+imm]
-            when "0000011" => res:= "000" & "00" & '1' & '1' & '0' & "01" & '0' & '0' & '0' & "00";
+    with op select 
+    res <= "000" & "00" & '1' & '1' & '0' & "01" & '0' & '0' & '0' when "0000011",  -- I - rd = mem[rs1+imm]
+           "000" & "00" & '1' & '1' & '0' & "00" & '0' & '0' & '0' when "0010011",  -- I - addi/slti/sltiu/xori/ori/andi/slli/srli/srai 
+           "000" & "00" & '1' & '1' & '0' & "10" & '1' & '1' & '0' when "1100111",  -- I - jalr - PC=rs1+SignExt(imm), rd = PC + 4 
+           "001" & "00" & '1' & '0' & '1' & "--" & '0' & '0' & '0' when "0100011",  -- S - [Address] = rs
+           "010" & "01" & '1' & '1' & '0' & "00" & '0' & '0' & '0' when "0110111",  -- U - lui - rd = {upimm, 12?b0}
+           "010" & "10" & '1' & '1' & '0' & "00" & '0' & '0' & '0' when "0010111",  -- U - auipc - rd = {upimm, 12'b0} + PC
+           "011" & "--" & '-' & '1' & '0' & "10" & '1' & '0' & '0' when "1101111",  -- J - jal - PC=JTA, rd = PC + 4
+           "---" & "00" & '0' & '1' & '0' & "00" & '0' & '0' & '0' when "0110011",  -- R - add/sub/sll/slt/sltu/xor/srl/sra/or/and
+           "100" & "00" & '0' & '0' & '0' & "--" & '0' & '0' & '1' when "1100011",  -- B - beq/bne/blt/bge/bltu/bgeu
+           (others => '-')  when others;
 
-            -- I - addi/slti/sltiu/xori/ori/andi/slli/srli/srai
-            when "0010011" => res:= "000" & "00" & '1' & '1' & '0' & "00" & '0' & '0' & '0' & "10";
-
-            -- I - jalr - PC=rs1+SignExt(imm), rd = PC + 4 
-            when "1100111" => res:= "000" & "00" & '1' & '1' & '0' & "10" & '1' & '1' & '0' & "00";
-
-            -- S - [Address] = rs
-            when "0100011" => res:= "001" & "00" & '1' & '0' & '1' & "--" & '0' & '0' & '0' & "00";
-
-            -- U - lui - rd = {upimm, 12?b0}
-            when "0110111" => res:= "010" & "01" & '1' & '1' & '0' & "00" & '0' & '0' & '0' & "00";
-
-            -- U - auipc - rd = {upimm, 12'b0} + PC
-            when "0010111" => res:= "010" & "10" & '1' & '1' & '0' & "00" & '0' & '0' & '0' & "00";
-
-            -- J - jal - PC=JTA, rd = PC + 4
-            when "1101111" => res:= "011" & "--" & '-' & '1' & '0' & "10" & '1' & '0' & '0' & "--";
-
-            -- R - add/sub/sll/slt/sltu/xor/srl/sra/or/and
-            when "0110011" => res:= "---" & "00" & '0' & '1' & '0' & "00" & '0' & '0' & '0' & "10";
-
-            -- B - beq/bne/blt/bge/bltu/bgeu
-            when "1100011" => res:= "100" & "00" & '0' & '0' & '0' & "--" & '0' & '0' & '1' & "01";
-
-            when others    => res := (others => '-');
-        end case;
-
-        ImmSrc <= res(14 downto 12);
-        ALUSrcA <= res(11 downto 10);
-        ALUSrcB <= res(9);
-        RegWrite <= res(8);    
-        MemWrite <= res(7);
-        ResultSrc <= res(6 downto 5);
-        Jump <= res(4);
-        JumpSrc <= res(3);
-        Branch <= res(2);
-        ALUOp <= res(1 downto 0);
-    end process;
+        ImmSrc <= res(12 downto 10);
+        ALUSrcA <= res(9 downto 8);
+        ALUSrcB <= res(7);
+        RegWrite <= res(6);    
+        MemWrite <= res(5);
+        ResultSrc <= res(4 downto 3);
+        Jump <= res(2);
+        JumpSrc <= res(1);
+        Branch <= res(0);
 end;

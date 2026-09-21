@@ -33,7 +33,7 @@ begin
 
     process
     begin
-        sw_i <= X"008E";
+        sw_i <= X"008E"; -- 1000 1110
         reset <= '1';
         wait for 2 * T;
 
