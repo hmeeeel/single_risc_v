@@ -5,12 +5,12 @@ use ieee.numeric_std.all;
 entity d_mem is
     port (
         clk, memwrite : in  std_logic;
-        aluresult, writedata      : in  std_logic_vector(31 downto 0);
+        aluresult, writedata : in  std_logic_vector(31 downto 0);
 
-        sw_i    : in  std_logic_vector(15 downto 0);
-        led_o   : out std_logic_vector(15 downto 0);
+        sw_i : in  std_logic_vector(15 downto 0);
+        led_o : out std_logic_vector(15 downto 0);
 
-        readdata      : out std_logic_vector(31 downto 0)
+        readdata : out std_logic_vector(31 downto 0)
     );
 end;
 
@@ -31,7 +31,7 @@ begin
                 if aluresult = LED_ADDR then
                     led_reg <= writedata(15 downto 0);
                 elsif aluresult = SW_ADDR then
-                    null;  -- SW read-only
+                    led_reg <= led_reg;  -- SW read-only = null
                 else
                     ram(to_integer(unsigned(aluresult(9 downto 2)))) <= writedata;
                 end if;

@@ -85,7 +85,7 @@ begin
                            led_o     => led_o,
                            readdata  => readdata_dmem_s);
 
-    div : freq  generic map (K => x"00000002") -- 00989680 - 500000 - 0007A120--10 000 000 = 00989680
+    div : freq  generic map (K => x"00989680") -- 00989680 - 500000 - 0007A120--10 000 000 = 00989680    --00000002 sim
         port map (
             CLK => CLK,
             RST => reset,
@@ -93,11 +93,11 @@ begin
             Q   => clk_slow);
 
    -- accel : lfsr_accel port map (clk       => clk_slow,
-   --                              reset     => reset,
-   --                              memwrite  => memwrite_s,
-   --                              aluresult => aluresult_s,
-   --                              writedata => writedata_s,
-   --                              state_rd  => readdata_accel_s);
+     --                            reset     => reset,
+       --                          memwrite  => memwrite_s,
+         --                       aluresult => aluresult_s,
+           --                    writedata => writedata_s,
+             --                    state_rd  => readdata_accel_s);
 
     accel_2 : lfsr_accel_2 port map (
         clk       => clk_slow,

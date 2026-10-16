@@ -38,9 +38,14 @@ begin
         wait for 2 * T;
 
         reset <= '0';
-        wait for 100 * T;
-        wait;
+        
+        for i in 1 to 64 loop
+            wait on led_o; 
+        end loop;
 
+        report "64 transitions reached at: " & time'image(now);
+        
+        wait;
     end process;
 
 end;
